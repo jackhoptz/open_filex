@@ -102,7 +102,7 @@ public class OpenFilePlugin implements MethodCallHandler
             }
             if (pathRequiresPermission()) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                    if(!isFileAvailable()){
+                    if (!isFileAvailable()) {
                         return;
                     }
                     if (!isMediaStorePath() && !Environment.isExternalStorageManager()) {
@@ -114,12 +114,6 @@ public class OpenFilePlugin implements MethodCallHandler
                     startActivity();
                 } else if (Build.VERSION.SDK_INT < 33) {
                     requestPermission(Manifest.permission.READ_EXTERNAL_STORAGE);
-                } else if (typeString.startsWith("image")) {
-                    requestPermission(Manifest.permission.READ_MEDIA_IMAGES);
-                } else if (typeString.startsWith("video")) {
-                    requestPermission(Manifest.permission.READ_MEDIA_VIDEO);
-                } else if (typeString.startsWith("audio")) {
-                    requestPermission(Manifest.permission.READ_MEDIA_AUDIO);
                 }
             } else {
                 startActivity();
@@ -131,11 +125,14 @@ public class OpenFilePlugin implements MethodCallHandler
     }
 
     private boolean canStartActivityWithPermission() {
+        // We do not request permission for image/audio/video
+        if (Build.VERSION.SDK_INT >= 33 && (typeString.startsWith("image") && typeString.startsWith("video")
+                && typeString.startsWith("audio"))) {
+            return false;
+        }
         return (Build.VERSION.SDK_INT < 33 && hasPermission(Manifest.permission.READ_EXTERNAL_STORAGE)) ||
-                (Build.VERSION.SDK_INT >= 33 && typeString.startsWith("image") && hasPermission(Manifest.permission.READ_MEDIA_IMAGES)) ||
-                (Build.VERSION.SDK_INT >= 33 && typeString.startsWith("video") && hasPermission(Manifest.permission.READ_MEDIA_VIDEO)) ||
-                (Build.VERSION.SDK_INT >= 33 && typeString.startsWith("audio") && hasPermission(Manifest.permission.READ_MEDIA_AUDIO)) ||
-                (Build.VERSION.SDK_INT >= 33 && !(typeString.startsWith("image") || typeString.startsWith("video") || typeString.startsWith("audio")));
+                (Build.VERSION.SDK_INT >= 33 && !(typeString.startsWith("image") || typeString.startsWith("video")
+                        || typeString.startsWith("audio")));
     }
 
     private boolean isMediaStorePath(){
